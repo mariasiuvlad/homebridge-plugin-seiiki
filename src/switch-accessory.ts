@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import {
   AccessoryPlugin,
   CharacteristicGetCallback,
@@ -12,8 +12,6 @@ import {
 
 export class ExampleSwitch implements AccessoryPlugin {
   private readonly log: Logging;
-
-  private switchOn = false;
 
   // This property must be existent!!
   name: string;
@@ -43,7 +41,8 @@ export class ExampleSwitch implements AccessoryPlugin {
       )
       .on(
         CharacteristicEventTypes.SET,
-        (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        (value: CharacteristicValue, _callback: CharacteristicSetCallback) => {
           const boolValue = value as boolean;
           axios
             .get<{ state: number }>(
@@ -57,7 +56,6 @@ export class ExampleSwitch implements AccessoryPlugin {
               );
               log.info("Switch state was set to: " + (isOn ? "ON" : "OFF"));
               // callback();
-              // callback(undefined, isOn);
             });
         }
       );

@@ -42,7 +42,8 @@ export = (api: API) => {
 class ExampleStaticPlatform implements StaticPlatformPlugin {
   private readonly log: Logging;
 
-  constructor(log: Logging, config: PlatformConfig, api: API) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(log: Logging, _config: PlatformConfig, _api: API) {
     this.log = log;
 
     // probably parse config or something here
