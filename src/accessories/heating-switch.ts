@@ -10,7 +10,7 @@ import {
   CharacteristicEventTypes,
 } from "homebridge";
 
-export class ExampleSwitch implements AccessoryPlugin {
+export class HeatingSwitch implements AccessoryPlugin {
   private readonly log: Logging;
 
   // This property must be existent!!

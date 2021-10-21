@@ -6,7 +6,7 @@ import {
   PlatformConfig,
   StaticPlatformPlugin,
 } from "homebridge";
-import { ExampleSwitch } from "./switch-accessory";
+import { HeatingSwitch } from "./accessories";
 import { PLATFORM_NAME } from "./settings";
 
 /*
@@ -36,10 +36,10 @@ let hap: HAP;
 export = (api: API) => {
   hap = api.hap;
 
-  api.registerPlatform(PLATFORM_NAME, ExampleStaticPlatform);
+  api.registerPlatform(PLATFORM_NAME, SeiikiPlatform);
 };
 
-class ExampleStaticPlatform implements StaticPlatformPlugin {
+class SeiikiPlatform implements StaticPlatformPlugin {
   private readonly log: Logging;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -58,6 +58,6 @@ class ExampleStaticPlatform implements StaticPlatformPlugin {
    * The set of exposed accessories CANNOT change over the lifetime of the plugin!
    */
   accessories(callback: (foundAccessories: AccessoryPlugin[]) => void): void {
-    callback([new ExampleSwitch(hap, this.log, "Heating")]);
+    callback([new HeatingSwitch(hap, this.log, "Heating")]);
   }
 }
