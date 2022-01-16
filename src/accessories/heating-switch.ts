@@ -29,7 +29,7 @@ export class HeatingSwitch implements AccessoryPlugin {
       .on(
         CharacteristicEventTypes.GET,
         (callback: CharacteristicGetCallback) => {
-          axios.get<{ state: number }>("http://192.168.0.105").then((value) => {
+          axios.get<{ state: number }>("http://192.168.8.200").then((value) => {
             const isOn = value.data.state === 1;
             log.info(
               "Current state of the switch was returned: " +
@@ -46,7 +46,7 @@ export class HeatingSwitch implements AccessoryPlugin {
           const boolValue = value as boolean;
           axios
             .get<{ state: number }>(
-              `http://192.168.0.105/${boolValue ? "on" : "off"}`
+              `http://192.168.8.200/${boolValue ? "on" : "off"}`
             )
             .then((value) => {
               const isOn = value.data.state === 1;
