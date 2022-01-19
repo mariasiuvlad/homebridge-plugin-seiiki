@@ -38,12 +38,13 @@ export class HeatingSwitch implements AccessoryPlugin {
       .on(CharacteristicEventTypes.SET, async (value, callback) => {
         try {
           const boolValue = value as boolean
-          const apiCall = boolValue ? heatingApi.off : heatingApi.on
+          const apiCall = boolValue ? heatingApi.on : heatingApi.off
           const {
             data: { state },
           } = await apiCall()
           const isOn = state === 1
-          log.info("Switch state was set to: " + (isOn ? "ON" : "OFF"))
+          log.info("Switch state was set to: " + (boolValue ? "ON" : "OFF"))
+          log.info("Current state of the switch was returned: " + (isOn ? "ON" : "OFF"))
           callback(undefined, isOn)
         } catch (error) {
           callback(undefined, false)
