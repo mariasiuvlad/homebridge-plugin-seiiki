@@ -1,70 +1,60 @@
-import axios from "axios";
-import {
-  AccessoryPlugin,
-  CharacteristicGetCallback,
-  CharacteristicSetCallback,
-  CharacteristicValue,
-  HAP,
-  Logging,
-  Service,
-  CharacteristicEventTypes,
-} from "homebridge";
+import axios from "axios"
+import { AccessoryPlugin, HAP, Logging, Service, CharacteristicEventTypes } from "homebridge"
+
+const heatingApi = {
+  on: () => axios.get<{ state: number }>("http://192.168.8.200/on"),
+  off: () => axios.get<{ state: number }>("http://192.168.8.200/off"),
+  status: () => axios.get<{ state: number }>("http://192.168.8.200"),
+}
 
 export class HeatingSwitch implements AccessoryPlugin {
-  private readonly log: Logging;
+  private readonly log: Logging
 
   // This property must be existent!!
-  name: string;
+  name: string
 
-  private readonly switchService: Service;
-  private readonly informationService: Service;
+  private readonly switchService: Service
+  private readonly informationService: Service
 
   constructor(hap: HAP, log: Logging, name: string) {
-    this.log = log;
-    this.name = name;
+    this.log = log
+    this.name = name
 
-    this.switchService = new hap.Service.Switch(name);
+    this.switchService = new hap.Service.Switch(name)
     this.switchService
       .getCharacteristic(hap.Characteristic.On)
-      .on(
-        CharacteristicEventTypes.GET,
-        (callback: CharacteristicGetCallback) => {
-          axios.get<{ state: number }>("http://192.168.8.200").then((value) => {
-            const isOn = value.data.state === 1;
-            log.info(
-              "Current state of the switch was returned: " +
-                (isOn ? "ON" : "OFF")
-            );
-            callback(undefined, isOn);
-          });
+      .on(CharacteristicEventTypes.GET, async (callback) => {
+        try {
+          const {
+            data: { state },
+          } = await heatingApi.status()
+          const isOn = state === 1
+          log.info("Current state of the switch was returned: " + (isOn ? "ON" : "OFF"))
+          callback(undefined, isOn)
+        } catch (error) {
+          callback(undefined, false)
         }
-      )
-      .on(
-        CharacteristicEventTypes.SET,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        (value: CharacteristicValue, _callback: CharacteristicSetCallback) => {
-          const boolValue = value as boolean;
-          axios
-            .get<{ state: number }>(
-              `http://192.168.8.200/${boolValue ? "on" : "off"}`
-            )
-            .then((value) => {
-              const isOn = value.data.state === 1;
-              log.info(
-                "Current state of the switch was returned: " +
-                  (isOn ? "ON" : "OFF")
-              );
-              log.info("Switch state was set to: " + (isOn ? "ON" : "OFF"));
-              // callback();
-            });
+      })
+      .on(CharacteristicEventTypes.SET, async (value, callback) => {
+        try {
+          const boolValue = value as boolean
+          const apiCall = boolValue ? heatingApi.off : heatingApi.on
+          const {
+            data: { state },
+          } = await apiCall()
+          const isOn = state === 1
+          log.info("Switch state was set to: " + (isOn ? "ON" : "OFF"))
+          callback(undefined, isOn)
+        } catch (error) {
+          callback(undefined, false)
         }
-      );
+      })
 
     this.informationService = new hap.Service.AccessoryInformation()
       .setCharacteristic(hap.Characteristic.Manufacturer, "Custom Manufacturer")
-      .setCharacteristic(hap.Characteristic.Model, "Custom Model");
+      .setCharacteristic(hap.Characteristic.Model, "Custom Model")
 
-    log.info("Example switch '%s' created!", name);
+    log.info("Example switch '%s' created!", name)
   }
 
   /*
@@ -72,7 +62,7 @@ export class HeatingSwitch implements AccessoryPlugin {
    * Typical this only ever happens at the pairing process.
    */
   identify(): void {
-    this.log("Identify!");
+    this.log("Identify!")
   }
 
   /*
@@ -80,6 +70,6 @@ export class HeatingSwitch implements AccessoryPlugin {
    * It should return all services which should be added to the accessory.
    */
   getServices(): Service[] {
-    return [this.informationService, this.switchService];
+    return [this.informationService, this.switchService]
   }
 }
