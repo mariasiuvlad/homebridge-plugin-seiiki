@@ -1,5 +1,8 @@
 import axios from "axios"
 import { AccessoryPlugin, HAP, Logging, Service } from "homebridge"
+import { PullTimer } from "homebridge-http-base"
+
+const PULL_INTERVAL = 5 * 60 * 1000 // 5 minutes
 
 const parseResponse = (response: string) => {
   const ok = /stemp=\d{1,2}/.exec(response)
@@ -18,6 +21,7 @@ export class TemperatureSensor implements AccessoryPlugin {
 
   private readonly temperatureSensorService: Service
   private readonly informationService: Service
+  private readonly pullTimer: PullTimer
 
   constructor(hap: HAP, log: Logging, name: string) {
     this.log = log
@@ -31,7 +35,21 @@ export class TemperatureSensor implements AccessoryPlugin {
 
     this.temperatureSensorService
       .getCharacteristic(hap.Characteristic.CurrentTemperature)
-      .onGet(this.onGetTemperature)
+      .onGet(this.onGetTemperature.bind(this))
+
+    // refresh using pull timer
+    this.pullTimer = new PullTimer(
+      log,
+      PULL_INTERVAL,
+      this.onGetTemperature.bind(this),
+      (value) => {
+        this.temperatureSensorService.setCharacteristic(
+          hap.Characteristic.CurrentTemperature,
+          value
+        )
+      }
+    )
+    this.pullTimer.start()
   }
 
   async onGetTemperature() {
