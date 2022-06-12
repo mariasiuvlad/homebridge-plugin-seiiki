@@ -5,7 +5,7 @@ import { PullTimer } from "homebridge-http-base"
 const PULL_INTERVAL = 5 * 60 * 1000 // 5 minutes
 
 const parseResponse = (response: string) => {
-  const ok = /stemp=\d{1,2}/.exec(response)
+  const ok = /otemp=\d{1,2}/.exec(response)
   if (ok) {
     return ok[0].split("=")[1]
   } else {
@@ -53,7 +53,7 @@ export class TemperatureSensor implements AccessoryPlugin {
   }
 
   async onGetTemperature() {
-    const url = "http://192.168.8.106/aircon/get_control_info"
+    const url = "http://192.168.8.106/aircon/get_sensor_info"
     const { data } = await axios.get<string>(url)
     return parseResponse(data)
   }
