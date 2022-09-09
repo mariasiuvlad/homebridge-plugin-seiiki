@@ -7,7 +7,6 @@ import {
   StaticPlatformPlugin,
 } from "homebridge"
 import { HeatingSwitch } from "./accessories"
-import { TemperatureSensor } from "./accessories/temperature-sensor"
 import { PLATFORM_NAME } from "./settings"
 
 let hap: HAP
@@ -36,9 +35,6 @@ class SeiikiPlatform implements StaticPlatformPlugin {
    * The set of exposed accessories CANNOT change over the lifetime of the plugin!
    */
   accessories(callback: (foundAccessories: AccessoryPlugin[]) => void): void {
-    callback([
-      new HeatingSwitch(hap, this.log, "Heating"),
-      new TemperatureSensor(hap, this.log, "Temperature Sensor"),
-    ])
+    callback([new HeatingSwitch(hap, this.log, "Heating")])
   }
 }

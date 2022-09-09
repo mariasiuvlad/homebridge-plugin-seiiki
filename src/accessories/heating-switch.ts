@@ -1,11 +1,22 @@
-import axios from "axios"
+import axios, { AxiosResponse } from "axios"
 import { AccessoryPlugin, HAP, Logging, Service, CharacteristicEventTypes } from "homebridge"
 
-const heatingApi = {
-  on: () => axios.get<{ state: number }>("http://192.168.8.200/on"),
-  off: () => axios.get<{ state: number }>("http://192.168.8.200/off"),
-  status: () => axios.get<{ state: number }>("http://192.168.8.200"),
+/** @todo extract to lib */
+type HeatingApiResponse = { state: number; success: boolean }
+
+/** @todo extract to lib */
+interface HeatingApi {
+  on: () => Promise<AxiosResponse<HeatingApiResponse>>
+  off: () => Promise<AxiosResponse<HeatingApiResponse>>
+  status: () => Promise<AxiosResponse<HeatingApiResponse>>
 }
+
+/** @todo extract to lib */
+const heatingApi = (uri: string): HeatingApi => ({
+  on: () => axios.get<HeatingApiResponse>(`${uri}/on`),
+  off: () => axios.get<HeatingApiResponse>(`${uri}/off`),
+  status: () => axios.get<HeatingApiResponse>(uri),
+})
 
 export class HeatingSwitch implements AccessoryPlugin {
   private readonly log: Logging
@@ -13,12 +24,15 @@ export class HeatingSwitch implements AccessoryPlugin {
   // This property must be existent!!
   name: string
 
+  heatingApi: HeatingApi
+
   private readonly switchService: Service
   private readonly informationService: Service
 
   constructor(hap: HAP, log: Logging, name: string) {
     this.log = log
     this.name = name
+    this.heatingApi = heatingApi("http://192.168.8.200")
 
     this.switchService = new hap.Service.Switch(name)
     this.switchService
@@ -27,7 +41,7 @@ export class HeatingSwitch implements AccessoryPlugin {
         try {
           const {
             data: { state },
-          } = await heatingApi.status()
+          } = await this.heatingApi.status()
           const isOn = state === 1
           log.info("Current state of the switch was returned: " + (isOn ? "ON" : "OFF"))
           callback(undefined, isOn)
@@ -38,7 +52,7 @@ export class HeatingSwitch implements AccessoryPlugin {
       .on(CharacteristicEventTypes.SET, async (value, callback) => {
         try {
           const boolValue = value as boolean
-          const apiCall = boolValue ? heatingApi.on : heatingApi.off
+          const apiCall = boolValue ? this.heatingApi.on : this.heatingApi.off
           const {
             data: { state },
           } = await apiCall()
